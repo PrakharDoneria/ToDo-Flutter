@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'create.dart';
 import 'edit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 void main() {
   runApp(MyApp());
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'To-Do List',
       theme: CupertinoThemeData(
         brightness: Brightness.light,
-        primaryColor: CupertinoColors.systemBlue, // Change primary color
+        primaryColor: CupertinoColors.systemBlue,
       ),
       home: ToDoListScreen(),
     );
@@ -35,6 +36,7 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
   void initState() {
     super.initState();
     _loadTasks();
+    initializeUnityAds();
   }
 
   Future<void> _loadTasks() async {
@@ -49,6 +51,14 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
     final prefs = await SharedPreferences.getInstance();
     final tasksStringList = _tasks.map((task) => jsonEncode(task)).toList();
     await prefs.setStringList('tasks', tasksStringList);
+  }
+
+  Future<void> initializeUnityAds() async {
+    await UnityAds.init(
+      gameId: '5122862',
+      onComplete: () => print('Initialization Complete'),
+      onFailed: (error, message) => print('Initialization Failed: $error $message'),
+    );
   }
 
   @override
@@ -99,17 +109,17 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
                               children: [
                                 Text(
                                   title!,
-                                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold, color: CupertinoColors.label), // Adjust text color
+                                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold, color: CupertinoColors.label),
                                 ),
                                 SizedBox(height: 4.0),
                                 Text(
                                   truncatedDescription,
-                                  style: TextStyle(fontSize: 16.0, color: CupertinoColors.secondaryLabel), // Adjust text color
+                                  style: TextStyle(fontSize: 16.0, color: CupertinoColors.secondaryLabel),
                                 ),
                               ],
                             ),
                           ),
-                          Icon(CupertinoIcons.forward, color: CupertinoColors.systemBlue), // Adjust icon color
+                          Icon(CupertinoIcons.forward, color: CupertinoColors.systemBlue),
                         ],
                       ),
                     ),
@@ -119,10 +129,9 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
             ),
             Positioned(
               bottom: 16.0,
-              right: 16.0,
               child: CupertinoButton.filled(
                 padding: EdgeInsets.all(12.0),
-                child: Icon(CupertinoIcons.add, color: CupertinoColors.white), // Adjust icon color
+                child: Icon(CupertinoIcons.add, color: CupertinoColors.white),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -138,6 +147,17 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
                     }
                   });
                 },
+              ),
+            ),
+            Positioned(
+              bottom: 16.0,
+              right: 12.0,
+              child: UnityBannerAd(
+                placementId: 'Banner_Ad',
+                onLoad: (placementId) => print('Banner loaded: $placementId'),
+                onClick: (placementId) => print('Banner clicked: $placementId'),
+                onShown: (placementId) => print('Banner shown: $placementId'),
+                onFailed: (placementId, error, message) => print('Banner Ad $placementId failed: $error $message'),
               ),
             ),
           ],
@@ -157,14 +177,14 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
                 Navigator.pop(context);
                 _editTask(task, index);
               },
-              child: Text('Edit', style: TextStyle(color: CupertinoColors.systemBlue)), // Adjust text color
+              child: Text('Edit', style: TextStyle(color: CupertinoColors.systemBlue)),
             ),
             CupertinoActionSheetAction(
               onPressed: () {
                 Navigator.pop(context);
                 _deleteTask(index);
               },
-              child: Text('Delete', style: TextStyle(color: CupertinoColors.systemRed)), // Adjust text color
+              child: Text('Delete', style: TextStyle(color: CupertinoColors.systemRed)),
               isDestructiveAction: true,
             ),
           ],
@@ -172,7 +192,7 @@ class _ToDoListScreenState extends State<ToDoListScreen> {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('Cancel', style: TextStyle(color: CupertinoColors.systemBlue)), // Adjust text color
+            child: Text('Cancel', style: TextStyle(color: CupertinoColors.systemBlue)),
           ),
         );
       },
@@ -266,7 +286,7 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
               CupertinoTextField(
                 controller: _descriptionController,
                 placeholder: 'Description',
-                maxLines: null, // Allow multiline
+                maxLines: null,
                 decoration: BoxDecoration(
                   border: Border.all(color: CupertinoColors.lightBackgroundGray),
                   borderRadius: BorderRadius.circular(8.0),
@@ -274,7 +294,7 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
               ),
               SizedBox(height: 20),
               CupertinoButton.filled(
-                child: Text('Save Changes', style: TextStyle(color: CupertinoColors.white)), // Adjust text color
+                child: Text('Save Changes', style: TextStyle(color: CupertinoColors.white)),
                 onPressed: () {
                   _saveEditedTask(context);
                 },
@@ -292,7 +312,7 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
       'title': _titleController.text,
       'description': _descriptionController.text,
     };
-    final jsonString = jsonEncode(editedTask); // Convert to JSON string
+    final jsonString = jsonEncode(editedTask);
     await prefs.setString('task_${widget.task}', jsonString);
     Navigator.pop(context, editedTask);
   }
@@ -311,7 +331,7 @@ class CreateToDoScreen extends StatelessWidget {
         'title': newTaskTitle,
         'description': newTaskDescription,
       };
-      final jsonString = jsonEncode(newTask); // Convert to JSON string
+      final jsonString = jsonEncode(newTask);
       await prefs.setString('task_$newTaskTitle', jsonString);
       Navigator.pop(context, newTask);
     }
@@ -341,7 +361,7 @@ class CreateToDoScreen extends StatelessWidget {
               CupertinoTextField(
                 controller: _descriptionController,
                 placeholder: 'Description',
-                maxLines: null, // Allow multiline
+                maxLines: null,
                 decoration: BoxDecoration(
                   border: Border.all(color: CupertinoColors.lightBackgroundGray),
                   borderRadius: BorderRadius.circular(8.0),
@@ -349,7 +369,7 @@ class CreateToDoScreen extends StatelessWidget {
               ),
               SizedBox(height: 20),
               CupertinoButton.filled(
-                child: Text('Add To-Do', style: TextStyle(color: CupertinoColors.white)), // Adjust text color
+                child: Text('Add To-Do', style: TextStyle(color: CupertinoColors.white)),
                 onPressed: () {
                   _saveNewTask(context);
                 },

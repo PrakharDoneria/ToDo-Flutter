@@ -1,6 +1,8 @@
+// Import necessary packages
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class EditToDoScreen extends StatefulWidget {
   final String task;
@@ -18,9 +20,18 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
   @override
   void initState() {
     super.initState();
+    initializeUnityAds(); // Initialize Unity Ads
     _titleController = TextEditingController(text: widget.task);
-    _descriptionController = TextEditingController(); // Initialize _descriptionController
+    _descriptionController = TextEditingController();
     _loadDescription();
+  }
+
+  Future<void> initializeUnityAds() async {
+    await UnityAds.init(
+      gameId: '5122862',
+      onComplete: () => print('Initialization Complete'),
+      onFailed: (error, message) => print('Initialization Failed: $error $message'),
+    );
   }
 
   Future<void> _loadDescription() async {
@@ -29,7 +40,7 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
     if (taskJsonString != null) {
       final task = jsonDecode(taskJsonString);
       setState(() {
-        _descriptionController.text = task['description']; // Set text directly to avoid late initialization
+        _descriptionController.text = task['description'] ?? '';
       });
     }
   }
@@ -65,7 +76,7 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
               CupertinoTextField(
                 controller: _descriptionController,
                 placeholder: 'Description',
-                maxLines: null, // Allow multiline
+                maxLines: null,
                 decoration: BoxDecoration(
                   border: Border.all(color: CupertinoColors.lightBackgroundGray),
                   borderRadius: BorderRadius.circular(8.0),
@@ -77,6 +88,14 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
                 onPressed: () {
                   _saveEditedTask(context);
                 },
+              ),
+              SizedBox(height: 20),
+              UnityBannerAd(
+                placementId: 'Banner_Ad',
+                onLoad: (placementId) => print('Banner loaded: $placementId'),
+                onClick: (placementId) => print('Banner clicked: $placementId'),
+                onShown: (placementId) => print('Banner shown: $placementId'),
+                onFailed: (placementId, error, message) => print('Banner Ad $placementId failed: $error $message'),
               ),
             ],
           ),
@@ -91,7 +110,7 @@ class _EditToDoScreenState extends State<EditToDoScreen> {
       'title': _titleController.text,
       'description': _descriptionController.text,
     };
-    final jsonString = jsonEncode(editedTask); // Convert to JSON string
+    final jsonString = jsonEncode(editedTask);
     await prefs.setString('task_${widget.task}', jsonString);
     Navigator.pop(context, editedTask);
   }
